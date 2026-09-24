@@ -8,16 +8,14 @@
 
   <style>
     :root {
-      --bg-color: #f8fafc;
+      --bg-color: #ffffff;
       --card-bg: #ffffff;
       --card-border: #e2e8f0;
 
-      /* 부드럽고 연해진 소프트 슬레이트 남색 텍스트 시스템 */
       --text-dark-navy: #334155;
       --text-main-navy: #475569;
       --text-sub-navy: #64748b;
 
-      /* 소프트 파스텔 연하늘색 컬러 시스템 */
       --pastel-sky-bg: #f0f9ff;
       --pastel-sky-soft: #e0f2fe;
       --pastel-sky-border: #bae6fd;
@@ -27,29 +25,26 @@
       --accent-gray: #f1f5f9;
       --accent-soft-red: #fef2f2;
       --accent-red-text: #ef4444;
-      
-      /* 노션 강조 버튼 색상 */
-      --notion-btn-bg: #0f172a;
-      --notion-btn-hover: #1e293b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-style: normal !important; }
 
-    body {
+    /* 바깥 여백 싹 제거 및 전체 화면 핏 */
+    html, body {
       width: 100vw; height: 100vh;
+      margin: 0; padding: 0;
+      overflow: hidden;
       background: var(--bg-color);
       font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
       color: var(--text-main-navy);
-      display: flex; justify-content: center; align-items: center;
-      padding: 12px;
     }
 
+    /* 위젯 테두리 및 최대 크기 제한 제거 */
     .diet-widget {
-      width: 100%; max-width: 460px; height: 100%; max-height: 860px;
+      width: 100%; height: 100%;
       background: var(--card-bg);
-      border-radius: 20px;
-      border: 1px solid var(--card-border);
-      box-shadow: 0 10px 28px rgba(51, 65, 85, 0.05);
+      border: none; border-radius: 0;
+      box-shadow: none;
       display: flex; flex-direction: column;
       position: relative;
       overflow: hidden;
@@ -57,7 +52,7 @@
 
     /* 헤더 */
     .widget-header {
-      padding: 18px 20px 14px;
+      padding: 16px 20px 14px;
       display: flex; justify-content: space-between; align-items: center;
       border-bottom: 1px solid #f1f5f9;
     }
@@ -72,14 +67,6 @@
       background: var(--pastel-sky-bg); padding: 5px 10px;
       border-radius: 20px; border: 1px solid var(--pastel-sky-border);
     }
-
-    .btn-notion {
-      background: var(--notion-btn-bg); color: #ffffff;
-      border: none; padding: 6px 12px; border-radius: 20px;
-      font-size: 11.5px; font-weight: 700; cursor: pointer;
-      transition: background 0.2s ease; display: flex; align-items: center; gap: 4px;
-    }
-    .btn-notion:hover { background: var(--notion-btn-hover); }
 
     /* 탭 네비게이션 */
     .nav-tabs {
@@ -192,7 +179,7 @@
     
     .macro-badge-group {
       display: flex; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-sub-navy);
-      background: var(--accent-gray); padding: 8px 12px; border-radius: 8px; justify-content: space-around;
+      background: var(--accent-gray); padding: 8px 12px; border-radius: 8px; justify-around: space-around;
     }
     .macro-item span { color: var(--text-dark-navy); font-weight: 800; }
 
@@ -226,28 +213,16 @@
       background: #f8fafc; padding: 10px 12px; border-radius: 10px; font-size: 11.5px;
       border: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;
     }
-
-    /* 토스트 알림 */
-    .toast-status {
-      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%) translateY(100px);
-      background: var(--text-dark-navy); color: #ffffff; padding: 9px 18px; border-radius: 30px;
-      font-size: 11.5px; font-weight: 600; opacity: 0; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none; z-index: 50; white-space: nowrap;
-    }
-    .toast-status.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   </style>
 </head>
 <body>
 
 <div class="diet-widget">
-  <div id="toastStatus" class="toast-status">저장되었습니다.</div>
-
   <!-- Header -->
   <div class="widget-header">
     <div class="widget-title">Diet & Fitness</div>
     <div class="header-actions">
-      <div class="date-badge" id="todayDate">2026-09-25</div>
-      <button class="btn-notion" onclick="exportToNotion()">노션으로 전송 🚀</button>
+      <div class="date-badge" id="todayDate">----. --. --</div>
     </div>
   </div>
 
@@ -275,7 +250,7 @@
       <div class="card-title">
         <span>인바디</span>
         <label class="toggle-container">
-          <input type="checkbox" id="inbodyToggle" onchange="toggleInbodyInputs()"> 기록 포함
+          <input type="checkbox" id="inbodyToggle" onchange="toggleInbodyInputs(); scheduleAutoSync();"> 기록 포함
         </label>
       </div>
 
@@ -283,39 +258,37 @@
         <div class="grid-2">
           <div class="input-group">
             <label class="input-label">골격근량 (kg)</label>
-            <input type="number" step="0.1" class="input-field" id="smmInput">
+            <input type="number" step="0.1" class="input-field" id="smmInput" oninput="scheduleAutoSync()">
           </div>
           <div class="input-group">
             <label class="input-label">체지방률 (%)</label>
-            <input type="number" step="0.1" class="input-field" id="pbfInput">
+            <input type="number" step="0.1" class="input-field" id="pbfInput" oninput="scheduleAutoSync()">
           </div>
         </div>
 
         <div class="grid-2">
           <div class="input-group">
             <label class="input-label">체지방량 (kg)</label>
-            <input type="number" step="0.1" class="input-field" id="bfmInput">
+            <input type="number" step="0.1" class="input-field" id="bfmInput" oninput="scheduleAutoSync()">
           </div>
           <div class="input-group">
             <label class="input-label">BMI</label>
-            <input type="number" step="0.1" class="input-field" id="bmiInput">
+            <input type="number" step="0.1" class="input-field" id="bmiInput" oninput="scheduleAutoSync()">
           </div>
         </div>
 
         <div class="grid-2">
           <div class="input-group">
             <label class="input-label">내장지방 Lv</label>
-            <input type="number" step="1" class="input-field" id="visceralInput">
+            <input type="number" step="1" class="input-field" id="visceralInput" oninput="scheduleAutoSync()">
           </div>
           <div class="input-group">
             <label class="input-label">기초대사량 (kcal)</label>
-            <input type="number" step="1" class="input-field" id="bmrInput">
+            <input type="number" step="1" class="input-field" id="bmrInput" oninput="scheduleAutoSync()">
           </div>
         </div>
       </div>
     </div>
-
-    <button class="btn-main" onclick="saveWeightDataManually()">저장</button>
   </div>
 
   <!-- TAB 2: 식단 기록 -->
@@ -324,7 +297,7 @@
     <div class="meal-row">
       <div class="meal-header">
         <span>Breakfast</span>
-        <input type="time" class="time-input" id="time-breakfast">
+        <input type="time" class="time-input" id="time-breakfast" onchange="scheduleAutoSync()">
       </div>
       <div class="photo-upload-box" onclick="triggerFileInput('photo-breakfast')">
         <span id="label-breakfast" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
@@ -344,7 +317,7 @@
     <div class="meal-row">
       <div class="meal-header">
         <span>Lunch</span>
-        <input type="time" class="time-input" id="time-lunch">
+        <input type="time" class="time-input" id="time-lunch" onchange="scheduleAutoSync()">
       </div>
       <div class="photo-upload-box" onclick="triggerFileInput('photo-lunch')">
         <span id="label-lunch" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
@@ -364,7 +337,7 @@
     <div class="meal-row">
       <div class="meal-header">
         <span>Dinner</span>
-        <input type="time" class="time-input" id="time-dinner">
+        <input type="time" class="time-input" id="time-dinner" onchange="scheduleAutoSync()">
       </div>
       <div class="photo-upload-box" onclick="triggerFileInput('photo-dinner')">
         <span id="label-dinner" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
@@ -384,7 +357,7 @@
     <div class="meal-row">
       <div class="meal-header">
         <span>Snack</span>
-        <input type="time" class="time-input" id="time-snack">
+        <input type="time" class="time-input" id="time-snack" onchange="scheduleAutoSync()">
       </div>
       <div class="photo-upload-box" onclick="triggerFileInput('photo-snack')">
         <span id="label-snack" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
@@ -399,8 +372,6 @@
         <div class="macro-item">지 <span id="fat-snack">0</span>g</div>
       </div>
     </div>
-
-    <button class="btn-main" onclick="saveDietData()">저장</button>
   </div>
 
   <!-- TAB 3: 운동 기록 -->
@@ -531,12 +502,21 @@
   };
   let exerciseLogs = [];
 
-  const STORAGE_KEY = 'diet_widget_v6';
+  let syncTimer = null;
 
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('todayDate').innerText = new Date().toISOString().split('T')[0];
+  // 대한민국(Asia/Seoul) 표준시 YYYY-MM-DD 추출 함수
+  function getKstDateString() {
+    return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    // 한국 시간 기준 날짜 적용
+    const todayStr = getKstDateString();
+    document.getElementById('todayDate').innerText = todayStr;
     renderDropdownItems();
-    loadWidgetData();
+
+    // 노션 DB 자동 데이터 로드
+    await loadDataFromNotion(todayStr);
 
     document.addEventListener('click', (e) => {
       const selectBox = document.getElementById('cardioSelectBox');
@@ -547,11 +527,90 @@
     });
   });
 
-  function showToast(message) {
-    const toast = document.getElementById('toastStatus');
-    toast.innerText = message;
-    toast.classList.add('show');
-    setTimeout(() => { toast.classList.remove('show'); }, 2200);
+  /* --- 백그라운드 자동 저장 스케줄러 --- */
+  function scheduleAutoSync() {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+      syncToNotion();
+    }, 1000);
+  }
+
+  /* --- 1. 노션 DB에서 오늘 데이터 불러오기 --- */
+  async function loadDataFromNotion(dateStr) {
+    try {
+      const res = await fetch(`/api/notion?date=${dateStr}`);
+      const result = await res.json();
+
+      if (res.ok && result.success && result.data) {
+        const data = result.data;
+
+        if (data.weightData) {
+          if (data.weightData.weight) document.getElementById('weightInput').value = data.weightData.weight;
+          if (data.weightData.hasInbody) {
+            document.getElementById('inbodyToggle').checked = true;
+            toggleInbodyInputs();
+            document.getElementById('smmInput').value = data.weightData.smm || '';
+            document.getElementById('pbfInput').value = data.weightData.pbf || '';
+            document.getElementById('bfmInput').value = data.weightData.bfm || '';
+            document.getElementById('bmiInput').value = data.weightData.bmi || '';
+            document.getElementById('visceralInput').value = data.weightData.visceral || '';
+            document.getElementById('bmrInput').value = data.weightData.bmr || '';
+          }
+        }
+
+        if (data.dietData) {
+          ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+            if (data.dietData[meal]) {
+              dietData[meal] = { ...dietData[meal], ...data.dietData[meal] };
+              document.getElementById(`food-${meal}`).value = dietData[meal].food || '';
+              document.getElementById(`time-${meal}`).value = dietData[meal].time || '';
+              updateMacroDisplay(meal, dietData[meal].cal || 0, dietData[meal].carb || 0, dietData[meal].protein || 0, dietData[meal].fat || 0);
+            }
+          });
+        }
+
+        if (data.exerciseLogs) {
+          exerciseLogs = data.exerciseLogs;
+          renderExerciseList();
+        }
+      }
+    } catch (e) {
+      console.error('Notion Load Silent Error:', e);
+    }
+  }
+
+  /* --- 2. 노션 DB로 자동 동기화 --- */
+  async function syncToNotion() {
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+      dietData[meal].food = document.getElementById(`food-${meal}`).value;
+      dietData[meal].time = document.getElementById(`time-${meal}`).value;
+    });
+
+    const payload = {
+      date: document.getElementById('todayDate').innerText,
+      weightData: {
+        weight: document.getElementById('weightInput').value,
+        hasInbody: document.getElementById('inbodyToggle').checked,
+        smm: document.getElementById('smmInput').value,
+        pbf: document.getElementById('pbfInput').value,
+        bfm: document.getElementById('bfmInput').value,
+        bmi: document.getElementById('bmiInput').value,
+        visceral: document.getElementById('visceralInput').value,
+        bmr: document.getElementById('bmrInput').value
+      },
+      dietData: dietData,
+      exerciseLogs: exerciseLogs
+    };
+
+    try {
+      await fetch('/api/notion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      console.error('Notion Save Silent Error:', error);
+    }
   }
 
   function switchTab(tabName) {
@@ -562,7 +621,7 @@
     document.getElementById(`tab-${tabName}`).classList.add('active');
   }
 
-  /* --- 1. 체중 & 인바디 --- */
+  /* --- 체중 & 인바디 --- */
   function handleWeightFocus(inputEl) {
     let val = inputEl.value.replace(/[^0-9.]/g, '');
     inputEl.value = val;
@@ -582,8 +641,7 @@
       let numVal = parseFloat(rawVal);
       if (!isNaN(numVal)) {
         inputEl.value = `${numVal}kg`;
-        saveWeightDataSilent(numVal);
-        showToast(`체중(${numVal}kg)이 저장되었습니다.`);
+        scheduleAutoSync();
       }
     }
   }
@@ -593,26 +651,7 @@
     document.getElementById('inbodyFields').style.display = isChecked ? 'flex' : 'none';
   }
 
-  function saveWeightDataSilent(numVal) {
-    const data = {
-      date: document.getElementById('todayDate').innerText,
-      weight: numVal ? `${numVal}kg` : '',
-      hasInbody: document.getElementById('inbodyToggle').checked,
-      smm: document.getElementById('smmInput').value,
-      pbf: document.getElementById('pbfInput').value,
-      bfm: document.getElementById('bfmInput').value,
-      bmi: document.getElementById('bmiInput').value,
-      visceral: document.getElementById('visceralInput').value,
-      bmr: document.getElementById('bmrInput').value
-    };
-    localStorage.setItem(STORAGE_KEY + '_weight', JSON.stringify(data));
-  }
-
-  function saveWeightDataManually() {
-    saveWeightAndFormat(document.getElementById('weightInput'));
-  }
-
-  /* --- 2. 식단 입력 --- */
+  /* --- 식단 입력 --- */
   function handleMealKeyDown(event, mealType) {
     if (event.key === 'Enter') event.target.blur();
   }
@@ -633,6 +672,7 @@
       updateMacroDisplay(mealType, 0, 0, 0, 0);
       dietData[mealType].food = '';
       dietData[mealType].cal = 0;
+      scheduleAutoSync();
       return;
     }
 
@@ -645,7 +685,7 @@
     dietData[mealType].fat = calculated.fat;
 
     updateMacroDisplay(mealType, calculated.cal, calculated.carb, calculated.protein, calculated.fat);
-    showToast(`영양 성분이 자동 산출되었습니다.`);
+    scheduleAutoSync();
   }
 
   function calculateAiMacros(text) {
@@ -701,26 +741,16 @@
         document.getElementById(`img-${mealType}`).style.display = 'block';
         document.getElementById(`label-${mealType}`).style.display = 'none';
         dietData[mealType].photo = e.target.result;
-        showToast(`사진이 첨부되었습니다.`);
+        scheduleAutoSync();
       };
       reader.readAsDataURL(file);
     }
   }
 
-  function saveDietData() {
-    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
-      dietData[meal].food = document.getElementById(`food-${meal}`).value;
-      dietData[meal].time = document.getElementById(`time-${meal}`).value;
-    });
-    localStorage.setItem(STORAGE_KEY + '_diet', JSON.stringify(dietData));
-    showToast('식단 기록이 저장되었습니다.');
-  }
-
-  /* --- 3. 커스텀 드롭다운 --- */
+  /* --- 운동 드롭다운 및 추가 --- */
   function toggleCardioDropdown(e) {
     e.stopPropagation();
-    const dropdown = document.getElementById('cardioDropdownMenu');
-    dropdown.classList.toggle('show');
+    document.getElementById('cardioDropdownMenu').classList.toggle('show');
   }
 
   function renderDropdownItems() {
@@ -757,7 +787,6 @@
       selectedCardioCategory = cardioCategories.length > 0 ? cardioCategories[0] : '';
     }
     renderDropdownItems();
-    showToast(`'${cat}' 카테고리가 삭제되었습니다.`);
   }
 
   function addCustomCardioCategory(e) {
@@ -769,7 +798,6 @@
         cardioCategories.push(trimmed);
         selectedCardioCategory = trimmed;
         renderDropdownItems();
-        showToast(`'${trimmed}' 카테고리가 추가되었습니다.`);
       }
     }
     document.getElementById('cardioDropdownMenu').classList.remove('show');
@@ -803,10 +831,7 @@
   }
 
   function addCardioLog() {
-    if (!selectedCardioCategory) {
-      showToast('운동을 선택해주세요.');
-      return;
-    }
+    if (!selectedCardioCategory) return;
 
     let desc = '';
     if (selectedCardioCategory === '러닝') {
@@ -827,7 +852,7 @@
 
     exerciseLogs.push({ type: '유산소', name: selectedCardioCategory, detail: desc });
     renderExerciseList();
-    showToast('운동이 기록되었습니다.');
+    scheduleAutoSync();
   }
 
   function addWeightLog() {
@@ -836,17 +861,14 @@
     const reps = document.getElementById('weightReps').value || '0';
     const sets = document.getElementById('weightSets').value || '0';
 
-    if (!name) {
-      showToast('운동 이름을 입력해 주세요.');
-      return;
-    }
+    if (!name) return;
 
     const desc = `${kg}kg × ${reps}회 × ${sets}세트`;
     exerciseLogs.push({ type: '근력 운동', name: name, detail: desc });
     
     document.getElementById('weightExName').value = '';
     renderExerciseList();
-    showToast('운동이 기록되었습니다.');
+    scheduleAutoSync();
   }
 
   function renderExerciseList() {
@@ -868,103 +890,12 @@
         </div>
       `;
     });
-
-    localStorage.setItem(STORAGE_KEY + '_ex', JSON.stringify(exerciseLogs));
   }
 
   function removeExLog(idx) {
     exerciseLogs.splice(idx, 1);
     renderExerciseList();
-    showToast('운동 기록이 삭제되었습니다.');
-  }
-
-  function loadWidgetData() {
-    const wData = localStorage.getItem(STORAGE_KEY + '_weight');
-    if (wData) {
-      const parsed = JSON.parse(wData);
-      if (parsed.weight) document.getElementById('weightInput').value = parsed.weight;
-      if (parsed.hasInbody) {
-        document.getElementById('inbodyToggle').checked = true;
-        toggleInbodyInputs();
-        document.getElementById('smmInput').value = parsed.smm || '';
-        document.getElementById('pbfInput').value = parsed.pbf || '';
-        document.getElementById('bfmInput').value = parsed.bfm || '';
-        document.getElementById('bmiInput').value = parsed.bmi || '';
-        document.getElementById('visceralInput').value = parsed.visceral || '';
-        document.getElementById('bmrInput').value = parsed.bmr || '';
-      }
-    }
-
-    const dData = localStorage.getItem(STORAGE_KEY + '_diet');
-    if (dData) {
-      dietData = JSON.parse(dData);
-      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
-        if (dietData[meal]) {
-          document.getElementById(`food-${meal}`).value = dietData[meal].food || '';
-          document.getElementById(`time-${meal}`).value = dietData[meal].time || '';
-          updateMacroDisplay(meal, dietData[meal].cal || 0, dietData[meal].carb || 0, dietData[meal].protein || 0, dietData[meal].fat || 0);
-          if (dietData[meal].photo) {
-            document.getElementById(`img-${meal}`).src = dietData[meal].photo;
-            document.getElementById(`img-${meal}`).style.display = 'block';
-            document.getElementById(`label-${meal}`).style.display = 'none';
-          }
-        }
-      });
-    }
-
-    const exData = localStorage.getItem(STORAGE_KEY + '_ex');
-    if (exData) {
-      exerciseLogs = JSON.parse(exData);
-      renderExerciseList();
-    }
-  }
-
-  /* --- 4. 노션 연동 전송 함수 --- */
-  async function exportToNotion() {
-    showToast('노션으로 데일리 리포트 생성 중...');
-
-    // 최신 상태 동기화
-    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
-      dietData[meal].food = document.getElementById(`food-${meal}`).value;
-      dietData[meal].time = document.getElementById(`time-${meal}`).value;
-    });
-
-    const payload = {
-      date: document.getElementById('todayDate').innerText,
-      weightData: {
-        weight: document.getElementById('weightInput').value,
-        hasInbody: document.getElementById('inbodyToggle').checked,
-        smm: document.getElementById('smmInput').value,
-        pbf: document.getElementById('pbfInput').value,
-        bfm: document.getElementById('bfmInput').value,
-        bmi: document.getElementById('bmiInput').value,
-        visceral: document.getElementById('visceralInput').value,
-        bmr: document.getElementById('bmrInput').value
-      },
-      dietData: dietData,
-      exerciseLogs: exerciseLogs
-    };
-
-    try {
-      const response = await fetch('/api/notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        showToast('🎉 노션 DB에 성공적으로 등록되었습니다!');
-      } else {
-        alert(`노션 전송 실패: ${result.error || '알 수 없는 오류'}`);
-        showToast('노션 전송 실패');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('서버 연결 중 오류가 발생했습니다.');
-      showToast('전송 실패');
-    }
+    scheduleAutoSync();
   }
 </script>
 </body>
