@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diet & Fitness Tracker</title>
+  <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+
+      /* 부드럽고 연해진 소프트 슬레이트 남색 텍스트 시스템 */
+      --text-dark-navy: #334155;
+      --text-main-navy: #475569;
+      --text-sub-navy: #64748b;
+
+      /* 소프트 파스텔 연하늘색 컬러 시스템 */
+      --pastel-sky-bg: #f0f9ff;
+      --pastel-sky-soft: #e0f2fe;
+      --pastel-sky-border: #bae6fd;
+      --pastel-sky-accent: #38bdf8;
+      --pastel-sky-text: #0284c7;
+
+      --accent-gray: #f1f5f9;
+      --accent-soft-red: #fef2f2;
+      --accent-red-text: #ef4444;
+      
+      /* 노션 강조 버튼 색상 */
+      --notion-btn-bg: #0f172a;
+      --notion-btn-hover: #1e293b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-style: normal !important; }
+
+    body {
+      width: 100vw; height: 100vh;
+      background: var(--bg-color);
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      color: var(--text-main-navy);
+      display: flex; justify-content: center; align-items: center;
+      padding: 12px;
+    }
+
+    .diet-widget {
+      width: 100%; max-width: 460px; height: 100%; max-height: 860px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 28px rgba(51, 65, 85, 0.05);
+      display: flex; flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 헤더 */
+    .widget-header {
+      padding: 18px 20px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .widget-title {
+      font-size: 20px; font-weight: 800;
+      color: var(--text-dark-navy); letter-spacing: -0.5px;
+    }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    
+    .date-badge {
+      font-size: 11px; font-weight: 700; color: var(--pastel-sky-text);
+      background: var(--pastel-sky-bg); padding: 5px 10px;
+      border-radius: 20px; border: 1px solid var(--pastel-sky-border);
+    }
+
+    .btn-notion {
+      background: var(--notion-btn-bg); color: #ffffff;
+      border: none; padding: 6px 12px; border-radius: 20px;
+      font-size: 11.5px; font-weight: 700; cursor: pointer;
+      transition: background 0.2s ease; display: flex; align-items: center; gap: 4px;
+    }
+    .btn-notion:hover { background: var(--notion-btn-hover); }
+
+    /* 탭 네비게이션 */
+    .nav-tabs {
+      display: flex; background: var(--accent-gray); padding: 4px; gap: 4px;
+      margin: 14px 18px 0; border-radius: 12px;
+    }
+    .tab-btn {
+      flex: 1; border: none; background: transparent; padding: 9px 0;
+      font-size: 12.5px; font-weight: 700; color: var(--text-sub-navy);
+      border-radius: 9px; cursor: pointer; transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: #ffffff; color: var(--pastel-sky-text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    /* 컨텐츠 영역 */
+    .tab-content {
+      flex: 1; padding: 18px; overflow-y: auto; display: none; flex-direction: column; gap: 14px;
+    }
+    .tab-content.active { display: flex; }
+
+    /* 카드 */
+    .section-card {
+      background: #ffffff; border: 1px solid var(--card-border);
+      border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .card-title {
+      font-size: 13.5px; font-weight: 700; color: var(--text-dark-navy);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    
+    /* Input 공통 */
+    .input-group { display: flex; flex-direction: column; gap: 5px; flex: 1; position: relative; }
+    .input-label { font-size: 11.5px; font-weight: 700; color: var(--text-sub-navy); }
+    .input-field {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--card-border);
+      border-radius: 10px; font-size: 12.5px; font-weight: 600; outline: none;
+      font-family: inherit; color: var(--text-main-navy); background: #ffffff;
+      transition: all 0.15s ease;
+    }
+    .input-field::placeholder { color: #94a3b8; }
+    .input-field:focus {
+      border-color: var(--pastel-sky-border);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+    }
+
+    /* 커스텀 드롭다운 */
+    .custom-select-box {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--pastel-sky-border);
+      border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--text-dark-navy);
+      background: var(--pastel-sky-bg); cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center; transition: all 0.2s ease;
+    }
+    .custom-select-box:hover { background: var(--pastel-sky-soft); }
+    .custom-select-box .arrow { font-size: 10px; color: var(--text-sub-navy); }
+
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #ffffff; border: 1px solid var(--card-border);
+      border-radius: 10px; box-shadow: 0 8px 20px rgba(51, 65, 85, 0.08);
+      display: none; flex-direction: column; z-index: 100; overflow: hidden;
+    }
+    .dropdown-menu.show { display: flex; }
+
+    .dropdown-item {
+      padding: 10px 14px; font-size: 12.5px; font-weight: 600; color: var(--text-dark-navy);
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: background 0.15s ease;
+    }
+    .dropdown-item:hover { background: var(--pastel-sky-bg); color: var(--pastel-sky-text); }
+    .dropdown-item.selected { background: var(--pastel-sky-soft); color: var(--pastel-sky-text); font-weight: 700; }
+    
+    .dropdown-item .del-btn {
+      color: var(--text-sub-navy); font-size: 11px; padding: 2px 6px; border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .dropdown-item .del-btn:hover { background: var(--accent-soft-red); color: var(--accent-red-text); }
+    
+    .dropdown-add-item {
+      padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--pastel-sky-text);
+      border-top: 1px solid var(--accent-gray); cursor: pointer; background: #fafafa;
+    }
+    .dropdown-add-item:hover { background: var(--pastel-sky-bg); }
+
+    /* 타임 피커 */
+    .time-input {
+      border: 1px solid var(--pastel-sky-border);
+      border-radius: 8px; padding: 4px 8px;
+      font-size: 11.5px; font-weight: 700;
+      color: var(--pastel-sky-text); background: var(--pastel-sky-bg);
+      outline: none; cursor: pointer; font-family: inherit;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    /* 식단 카드 */
+    .meal-row {
+      border: 1px solid var(--card-border); border-radius: 14px; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px; background: #ffffff;
+    }
+    .meal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 13.5px; color: var(--text-dark-navy); }
+    .photo-upload-box {
+      width: 100%; height: 95px; border: 1px dashed #cbd5e1;
+      border-radius: 10px; display: flex; justify-content: center; align-items: center;
+      cursor: pointer; background: #fafafa; position: relative; overflow: hidden;
+    }
+    .photo-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+    
+    .macro-badge-group {
+      display: flex; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-sub-navy);
+      background: var(--accent-gray); padding: 8px 12px; border-radius: 8px; justify-content: space-around;
+    }
+    .macro-item span { color: var(--text-dark-navy); font-weight: 800; }
+
+    /* 운동 세그먼트 */
+    .exercise-type-selector { display: flex; gap: 6px; }
+    .type-btn {
+      flex: 1; padding: 9px; border: 1px solid var(--card-border); border-radius: 10px;
+      background: #fff; font-size: 12px; font-weight: 700; color: var(--text-sub-navy); cursor: pointer; text-align: center;
+    }
+    .type-btn.active { border-color: var(--pastel-sky-border); background: var(--pastel-sky-bg); color: var(--pastel-sky-text); }
+
+    .set-row { display: flex; gap: 6px; align-items: center; }
+
+    /* 버튼 */
+    .btn-main {
+      background: var(--pastel-sky-soft); color: var(--pastel-sky-text);
+      border: 1px solid var(--pastel-sky-border); padding: 12px;
+      border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; text-align: center;
+      transition: all 0.15s ease;
+    }
+    .btn-main:hover { background: var(--pastel-sky-accent); color: #ffffff; }
+    
+    .btn-sub {
+      background: #f1f5f9; color: var(--text-main-navy); border: 1px solid var(--card-border);
+      padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+
+    .toggle-container { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 11.5px; color: var(--text-sub-navy); font-weight: 600; }
+
+    .log-item {
+      background: #f8fafc; padding: 10px 12px; border-radius: 10px; font-size: 11.5px;
+      border: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* 토스트 알림 */
+    .toast-status {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--text-dark-navy); color: #ffffff; padding: 9px 18px; border-radius: 30px;
+      font-size: 11.5px; font-weight: 600; opacity: 0; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none; z-index: 50; white-space: nowrap;
+    }
+    .toast-status.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="diet-widget">
+  <div id="toastStatus" class="toast-status">저장되었습니다.</div>
+
+  <!-- Header -->
+  <div class="widget-header">
+    <div class="widget-title">Diet & Fitness</div>
+    <div class="header-actions">
+      <div class="date-badge" id="todayDate">2026-09-25</div>
+      <button class="btn-notion" onclick="exportToNotion()">노션으로 전송 🚀</button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('weight')">체중 / 인바디</button>
+    <button class="tab-btn" onclick="switchTab('diet')">식단</button>
+    <button class="tab-btn" onclick="switchTab('exercise')">운동</button>
+  </div>
+
+  <!-- TAB 1: 체중 & 인바디 -->
+  <div class="tab-content active" id="tab-weight">
+    <div class="section-card">
+      <div class="card-title">체중</div>
+      <div class="input-group">
+        <input type="text" class="input-field" id="weightInput" 
+               placeholder="예: 65"
+               onfocus="handleWeightFocus(this)" 
+               onblur="handleWeightBlur(this)" 
+               onkeydown="handleWeightKeyDown(event, this)">
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="card-title">
+        <span>인바디</span>
+        <label class="toggle-container">
+          <input type="checkbox" id="inbodyToggle" onchange="toggleInbodyInputs()"> 기록 포함
+        </label>
+      </div>
+
+      <div id="inbodyFields" style="display: none; flex-direction: column; gap: 8px;">
+        <div class="grid-2">
+          <div class="input-group">
+            <label class="input-label">골격근량 (kg)</label>
+            <input type="number" step="0.1" class="input-field" id="smmInput">
+          </div>
+          <div class="input-group">
+            <label class="input-label">체지방률 (%)</label>
+            <input type="number" step="0.1" class="input-field" id="pbfInput">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label class="input-label">체지방량 (kg)</label>
+            <input type="number" step="0.1" class="input-field" id="bfmInput">
+          </div>
+          <div class="input-group">
+            <label class="input-label">BMI</label>
+            <input type="number" step="0.1" class="input-field" id="bmiInput">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label class="input-label">내장지방 Lv</label>
+            <input type="number" step="1" class="input-field" id="visceralInput">
+          </div>
+          <div class="input-group">
+            <label class="input-label">기초대사량 (kcal)</label>
+            <input type="number" step="1" class="input-field" id="bmrInput">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="saveWeightDataManually()">저장</button>
+  </div>
+
+  <!-- TAB 2: 식단 기록 -->
+  <div class="tab-content" id="tab-diet">
+    <!-- Breakfast -->
+    <div class="meal-row">
+      <div class="meal-header">
+        <span>Breakfast</span>
+        <input type="time" class="time-input" id="time-breakfast">
+      </div>
+      <div class="photo-upload-box" onclick="triggerFileInput('photo-breakfast')">
+        <span id="label-breakfast" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
+        <img id="img-breakfast" class="photo-preview" style="display:none;">
+        <input type="file" id="photo-breakfast" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'breakfast')">
+      </div>
+      <input type="text" class="input-field" id="food-breakfast" placeholder="음식명을 입력하세요" onblur="calculateMeal('breakfast')" onkeydown="handleMealKeyDown(event, 'breakfast')">
+      <div class="macro-badge-group">
+        <div class="macro-item">칼로리 <span id="cal-breakfast">0</span> kcal</div>
+        <div class="macro-item">탄 <span id="carb-breakfast">0</span>g</div>
+        <div class="macro-item">단 <span id="protein-breakfast">0</span>g</div>
+        <div class="macro-item">지 <span id="fat-breakfast">0</span>g</div>
+      </div>
+    </div>
+
+    <!-- Lunch -->
+    <div class="meal-row">
+      <div class="meal-header">
+        <span>Lunch</span>
+        <input type="time" class="time-input" id="time-lunch">
+      </div>
+      <div class="photo-upload-box" onclick="triggerFileInput('photo-lunch')">
+        <span id="label-lunch" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
+        <img id="img-lunch" class="photo-preview" style="display:none;">
+        <input type="file" id="photo-lunch" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'lunch')">
+      </div>
+      <input type="text" class="input-field" id="food-lunch" placeholder="음식명을 입력하세요" onblur="calculateMeal('lunch')" onkeydown="handleMealKeyDown(event, 'lunch')">
+      <div class="macro-badge-group">
+        <div class="macro-item">칼로리 <span id="cal-lunch">0</span> kcal</div>
+        <div class="macro-item">탄 <span id="carb-lunch">0</span>g</div>
+        <div class="macro-item">단 <span id="protein-lunch">0</span>g</div>
+        <div class="macro-item">지 <span id="fat-lunch">0</span>g</div>
+      </div>
+    </div>
+
+    <!-- Dinner -->
+    <div class="meal-row">
+      <div class="meal-header">
+        <span>Dinner</span>
+        <input type="time" class="time-input" id="time-dinner">
+      </div>
+      <div class="photo-upload-box" onclick="triggerFileInput('photo-dinner')">
+        <span id="label-dinner" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
+        <img id="img-dinner" class="photo-preview" style="display:none;">
+        <input type="file" id="photo-dinner" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'dinner')">
+      </div>
+      <input type="text" class="input-field" id="food-dinner" placeholder="음식명을 입력하세요" onblur="calculateMeal('dinner')" onkeydown="handleMealKeyDown(event, 'dinner')">
+      <div class="macro-badge-group">
+        <div class="macro-item">칼로리 <span id="cal-dinner">0</span> kcal</div>
+        <div class="macro-item">탄 <span id="carb-dinner">0</span>g</div>
+        <div class="macro-item">단 <span id="protein-dinner">0</span>g</div>
+        <div class="macro-item">지 <span id="fat-dinner">0</span>g</div>
+      </div>
+    </div>
+
+    <!-- Snack -->
+    <div class="meal-row">
+      <div class="meal-header">
+        <span>Snack</span>
+        <input type="time" class="time-input" id="time-snack">
+      </div>
+      <div class="photo-upload-box" onclick="triggerFileInput('photo-snack')">
+        <span id="label-snack" style="font-size:11px; color:var(--text-sub-navy);">사진 첨부</span>
+        <img id="img-snack" class="photo-preview" style="display:none;">
+        <input type="file" id="photo-snack" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'snack')">
+      </div>
+      <input type="text" class="input-field" id="food-snack" placeholder="음식명을 입력하세요" onblur="calculateMeal('snack')" onkeydown="handleMealKeyDown(event, 'snack')">
+      <div class="macro-badge-group">
+        <div class="macro-item">칼로리 <span id="cal-snack">0</span> kcal</div>
+        <div class="macro-item">탄 <span id="carb-snack">0</span>g</div>
+        <div class="macro-item">단 <span id="protein-snack">0</span>g</div>
+        <div class="macro-item">지 <span id="fat-snack">0</span>g</div>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="saveDietData()">저장</button>
+  </div>
+
+  <!-- TAB 3: 운동 기록 -->
+  <div class="tab-content" id="tab-exercise">
+    <div class="exercise-type-selector">
+      <div class="type-btn active" id="btnTypeCardio" onclick="selectExType('cardio')">유산소</div>
+      <div class="type-btn" id="btnTypeWeight" onclick="selectExType('weight')">근력 운동</div>
+    </div>
+
+    <!-- 유산소 Form -->
+    <div class="section-card" id="formCardio">
+      <div class="input-group">
+        <label class="input-label">운동</label>
+        <div class="custom-select-box" id="cardioSelectBox" onclick="toggleCardioDropdown(event)">
+          <span id="selectedCardioLabel">러닝</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="dropdown-menu" id="cardioDropdownMenu">
+          <div id="dropdownItemsContainer"></div>
+          <div class="dropdown-add-item" onclick="addCustomCardioCategory(event)">+ 직접 입력</div>
+        </div>
+      </div>
+
+      <div id="detailRunning" style="display:flex; flex-direction:column; gap:8px;">
+        <div class="grid-2">
+          <div class="input-group">
+            <label class="input-label">뛴 거리 (km)</label>
+            <input type="number" step="0.1" class="input-field" id="runDistance">
+          </div>
+          <div class="input-group">
+            <label class="input-label">총 시간 (분)</label>
+            <input type="number" class="input-field" id="runTime">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="input-group">
+            <label class="input-label">평균 페이스</label>
+            <input type="text" class="input-field" id="runPace" placeholder="예: 5'30&quot;">
+          </div>
+          <div class="input-group">
+            <label class="input-label">소모 칼로리 (kcal)</label>
+            <input type="number" class="input-field" id="runCal">
+          </div>
+        </div>
+      </div>
+
+      <div id="detailStair" style="display:none; flex-direction:column; gap:8px;">
+        <div class="card-title" style="font-size:11px; color:var(--text-sub-navy);">구간 설정</div>
+        <div id="stairSetContainer" style="display:flex; flex-direction:column; gap:4px;">
+          <div class="set-row">
+            <input type="number" class="input-field" placeholder="속도" style="flex:1;">
+            <input type="number" class="input-field" placeholder="시간(분)" style="flex:1;">
+            <input type="number" class="input-field" placeholder="세트" style="width:55px;">
+          </div>
+        </div>
+        <button class="btn-sub" onclick="addStairSetRow()">+ 구간 추가</button>
+        <div class="grid-2" style="margin-top:4px;">
+          <div class="input-group">
+            <label class="input-label">총 시간 (분)</label>
+            <input type="number" class="input-field" id="stairTotalTime">
+          </div>
+          <div class="input-group">
+            <label class="input-label">소모 칼로리 (kcal)</label>
+            <input type="number" class="input-field" id="stairCal">
+          </div>
+        </div>
+      </div>
+
+      <div id="detailGeneralCardio" class="grid-2" style="display:none;">
+        <div class="input-group">
+          <label class="input-label">총 시간 (분)</label>
+          <input type="number" class="input-field" id="genCardioTime">
+        </div>
+        <div class="input-group">
+          <label class="input-label">소모 칼로리 (kcal)</label>
+          <input type="number" class="input-field" id="genCardioCal">
+        </div>
+      </div>
+
+      <button class="btn-main" onclick="addCardioLog()" style="margin-top:4px;">운동 추가</button>
+    </div>
+
+    <!-- 근력 운동 Form -->
+    <div class="section-card" id="formWeight" style="display:none;">
+      <div class="input-group">
+        <label class="input-label">운동</label>
+        <input type="text" class="input-field" id="weightExName" placeholder="예: 벤치프레스">
+      </div>
+
+      <div class="grid-3">
+        <div class="input-group">
+          <label class="input-label">무게 (kg)</label>
+          <input type="number" step="0.5" class="input-field" id="weightKg">
+        </div>
+        <div class="input-group">
+          <label class="input-label">횟수 (회)</label>
+          <input type="number" class="input-field" id="weightReps">
+        </div>
+        <div class="input-group">
+          <label class="input-label">세트 (Set)</label>
+          <input type="number" class="input-field" id="weightSets">
+        </div>
+      </div>
+
+      <button class="btn-main" onclick="addWeightLog()" style="margin-top:4px;">운동 추가</button>
+    </div>
+
+    <!-- 오늘 완료한 운동 목록 -->
+    <div class="section-card">
+      <div class="card-title">오늘 완료한 운동</div>
+      <div id="exerciseLogList" style="display:flex; flex-direction:column; gap:6px;">
+        <div style="font-size:11px; color:var(--text-sub-navy); text-align:center; padding: 10px 0;">기록된 운동이 없습니다.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentExType = 'cardio';
+  let cardioCategories = ['러닝', '천국의 계단'];
+  let selectedCardioCategory = '러닝';
+
+  let dietData = {
+    breakfast: { food: '', time: '', cal: 0, carb: 0, protein: 0, fat: 0, photo: '' },
+    lunch: { food: '', time: '', cal: 0, carb: 0, protein: 0, fat: 0, photo: '' },
+    dinner: { food: '', time: '', cal: 0, carb: 0, protein: 0, fat: 0, photo: '' },
+    snack: { food: '', time: '', cal: 0, carb: 0, protein: 0, fat: 0, photo: '' }
+  };
+  let exerciseLogs = [];
+
+  const STORAGE_KEY = 'diet_widget_v6';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('todayDate').innerText = new Date().toISOString().split('T')[0];
+    renderDropdownItems();
+    loadWidgetData();
+
+    document.addEventListener('click', (e) => {
+      const selectBox = document.getElementById('cardioSelectBox');
+      const dropdown = document.getElementById('cardioDropdownMenu');
+      if (selectBox && dropdown && !selectBox.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+  });
+
+  function showToast(message) {
+    const toast = document.getElementById('toastStatus');
+    toast.innerText = message;
+    toast.classList.add('show');
+    setTimeout(() => { toast.classList.remove('show'); }, 2200);
+  }
+
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    event.currentTarget.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+  }
+
+  /* --- 1. 체중 & 인바디 --- */
+  function handleWeightFocus(inputEl) {
+    let val = inputEl.value.replace(/[^0-9.]/g, '');
+    inputEl.value = val;
+  }
+
+  function handleWeightBlur(inputEl) {
+    saveWeightAndFormat(inputEl);
+  }
+
+  function handleWeightKeyDown(event, inputEl) {
+    if (event.key === 'Enter') inputEl.blur();
+  }
+
+  function saveWeightAndFormat(inputEl) {
+    let rawVal = inputEl.value.replace(/[^0-9.]/g, '');
+    if (rawVal !== '') {
+      let numVal = parseFloat(rawVal);
+      if (!isNaN(numVal)) {
+        inputEl.value = `${numVal}kg`;
+        saveWeightDataSilent(numVal);
+        showToast(`체중(${numVal}kg)이 저장되었습니다.`);
+      }
+    }
+  }
+
+  function toggleInbodyInputs() {
+    const isChecked = document.getElementById('inbodyToggle').checked;
+    document.getElementById('inbodyFields').style.display = isChecked ? 'flex' : 'none';
+  }
+
+  function saveWeightDataSilent(numVal) {
+    const data = {
+      date: document.getElementById('todayDate').innerText,
+      weight: numVal ? `${numVal}kg` : '',
+      hasInbody: document.getElementById('inbodyToggle').checked,
+      smm: document.getElementById('smmInput').value,
+      pbf: document.getElementById('pbfInput').value,
+      bfm: document.getElementById('bfmInput').value,
+      bmi: document.getElementById('bmiInput').value,
+      visceral: document.getElementById('visceralInput').value,
+      bmr: document.getElementById('bmrInput').value
+    };
+    localStorage.setItem(STORAGE_KEY + '_weight', JSON.stringify(data));
+  }
+
+  function saveWeightDataManually() {
+    saveWeightAndFormat(document.getElementById('weightInput'));
+  }
+
+  /* --- 2. 식단 입력 --- */
+  function handleMealKeyDown(event, mealType) {
+    if (event.key === 'Enter') event.target.blur();
+  }
+
+  function calculateMeal(mealType) {
+    const inputEl = document.getElementById(`food-${mealType}`);
+    const foodText = inputEl.value.trim();
+    const timeInput = document.getElementById(`time-${mealType}`);
+
+    if (foodText && !timeInput.value) {
+      const now = new Date();
+      const hrs = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      timeInput.value = `${hrs}:${mins}`;
+    }
+
+    if (!foodText) {
+      updateMacroDisplay(mealType, 0, 0, 0, 0);
+      dietData[mealType].food = '';
+      dietData[mealType].cal = 0;
+      return;
+    }
+
+    const calculated = calculateAiMacros(foodText);
+    dietData[mealType].food = foodText;
+    dietData[mealType].time = timeInput.value;
+    dietData[mealType].cal = calculated.cal;
+    dietData[mealType].carb = calculated.carb;
+    dietData[mealType].protein = calculated.protein;
+    dietData[mealType].fat = calculated.fat;
+
+    updateMacroDisplay(mealType, calculated.cal, calculated.carb, calculated.protein, calculated.fat);
+    showToast(`영양 성분이 자동 산출되었습니다.`);
+  }
+
+  function calculateAiMacros(text) {
+    if (!text || !text.trim()) return { cal: 0, carb: 0, protein: 0, fat: 0 };
+    const items = text.split(/[,+\n]/);
+    let totalCal = 0, totalCarb = 0, totalProtein = 0, totalFat = 0;
+
+    const db = [
+      { keys: ['bhc 뿌링클', '뿌링클'], baseCal: 1900, carb: 110, protein: 130, fat: 100 },
+      { keys: ['참치캔', '참치'], baseCal: 150, carb: 0, protein: 25, fat: 5 },
+      { keys: ['닭가슴살'], baseCal: 130, carb: 0, protein: 24, fat: 2.5 },
+      { keys: ['현미밥', '공기밥', '햇반', '밥'], baseCal: 300, carb: 65, protein: 6, fat: 1 },
+      { keys: ['계란', '달걀'], baseCal: 70, carb: 0.5, protein: 6, fat: 5 },
+      { keys: ['사과'], baseCal: 80, carb: 21, protein: 0.5, fat: 0.3 }
+    ];
+
+    items.forEach(rawItem => {
+      const item = rawItem.trim();
+      if (!item) return;
+      let matched = false;
+
+      for (const food of db) {
+        if (food.keys.some(k => item.toLowerCase().includes(k.toLowerCase()))) {
+          matched = true;
+          totalCal += food.baseCal; totalCarb += food.carb; totalProtein += food.protein; totalFat += food.fat;
+          break;
+        }
+      }
+
+      if (!matched) {
+        totalCal += 200; totalCarb += 25; totalProtein += 10; totalFat += 6;
+      }
+    });
+
+    return { cal: Math.round(totalCal), carb: Math.round(totalCarb), protein: Math.round(totalProtein), fat: Math.round(totalFat) };
+  }
+
+  function updateMacroDisplay(mealType, cal, carb, protein, fat) {
+    document.getElementById(`cal-${mealType}`).innerText = cal;
+    document.getElementById(`carb-${mealType}`).innerText = carb;
+    document.getElementById(`protein-${mealType}`).innerText = protein;
+    document.getElementById(`fat-${mealType}`).innerText = fat;
+  }
+
+  function triggerFileInput(id) { document.getElementById(id).click(); }
+
+  function handleImageUpload(event, mealType) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById(`img-${mealType}`).src = e.target.result;
+        document.getElementById(`img-${mealType}`).style.display = 'block';
+        document.getElementById(`label-${mealType}`).style.display = 'none';
+        dietData[mealType].photo = e.target.result;
+        showToast(`사진이 첨부되었습니다.`);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function saveDietData() {
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+      dietData[meal].food = document.getElementById(`food-${meal}`).value;
+      dietData[meal].time = document.getElementById(`time-${meal}`).value;
+    });
+    localStorage.setItem(STORAGE_KEY + '_diet', JSON.stringify(dietData));
+    showToast('식단 기록이 저장되었습니다.');
+  }
+
+  /* --- 3. 커스텀 드롭다운 --- */
+  function toggleCardioDropdown(e) {
+    e.stopPropagation();
+    const dropdown = document.getElementById('cardioDropdownMenu');
+    dropdown.classList.toggle('show');
+  }
+
+  function renderDropdownItems() {
+    const container = document.getElementById('dropdownItemsContainer');
+    container.innerHTML = '';
+
+    cardioCategories.forEach(cat => {
+      const isSelected = (cat === selectedCardioCategory);
+      const item = document.createElement('div');
+      item.className = `dropdown-item ${isSelected ? 'selected' : ''}`;
+      
+      item.innerHTML = `
+        <span onclick="selectCardioOption(event, '${cat}')">${cat}</span>
+        <span class="del-btn" onclick="deleteCardioOption(event, '${cat}')">✕</span>
+      `;
+      container.appendChild(item);
+    });
+
+    document.getElementById('selectedCardioLabel').innerText = selectedCardioCategory || '운동 선택';
+    updateCardioFormDisplay();
+  }
+
+  function selectCardioOption(e, cat) {
+    e.stopPropagation();
+    selectedCardioCategory = cat;
+    renderDropdownItems();
+    document.getElementById('cardioDropdownMenu').classList.remove('show');
+  }
+
+  function deleteCardioOption(e, cat) {
+    e.stopPropagation();
+    cardioCategories = cardioCategories.filter(c => c !== cat);
+    if (selectedCardioCategory === cat) {
+      selectedCardioCategory = cardioCategories.length > 0 ? cardioCategories[0] : '';
+    }
+    renderDropdownItems();
+    showToast(`'${cat}' 카테고리가 삭제되었습니다.`);
+  }
+
+  function addCustomCardioCategory(e) {
+    e.stopPropagation();
+    const name = prompt('새 유산소 운동 이름을 입력하세요:');
+    if (name && name.trim()) {
+      const trimmed = name.trim();
+      if (!cardioCategories.includes(trimmed)) {
+        cardioCategories.push(trimmed);
+        selectedCardioCategory = trimmed;
+        renderDropdownItems();
+        showToast(`'${trimmed}' 카테고리가 추가되었습니다.`);
+      }
+    }
+    document.getElementById('cardioDropdownMenu').classList.remove('show');
+  }
+
+  function updateCardioFormDisplay() {
+    document.getElementById('detailRunning').style.display = (selectedCardioCategory === '러닝') ? 'flex' : 'none';
+    document.getElementById('detailStair').style.display = (selectedCardioCategory === '천국의 계단') ? 'flex' : 'none';
+    document.getElementById('detailGeneralCardio').style.display = (selectedCardioCategory !== '러닝' && selectedCardioCategory !== '천국의 계단' && selectedCardioCategory !== '') ? 'grid' : 'none';
+  }
+
+  function selectExType(type) {
+    currentExType = type;
+    document.getElementById('btnTypeCardio').classList.toggle('active', type === 'cardio');
+    document.getElementById('btnTypeWeight').classList.toggle('active', type === 'weight');
+    
+    document.getElementById('formCardio').style.display = type === 'cardio' ? 'flex' : 'none';
+    document.getElementById('formWeight').style.display = type === 'weight' ? 'flex' : 'none';
+  }
+
+  function addStairSetRow() {
+    const container = document.getElementById('stairSetContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'set-row';
+    newRow.innerHTML = `
+      <input type="number" class="input-field" placeholder="속도" style="flex:1;">
+      <input type="number" class="input-field" placeholder="시간(분)" style="flex:1;">
+      <input type="number" class="input-field" placeholder="세트" style="width:55px;">
+    `;
+    container.appendChild(newRow);
+  }
+
+  function addCardioLog() {
+    if (!selectedCardioCategory) {
+      showToast('운동을 선택해주세요.');
+      return;
+    }
+
+    let desc = '';
+    if (selectedCardioCategory === '러닝') {
+      const dist = document.getElementById('runDistance').value || '0';
+      const time = document.getElementById('runTime').value || '0';
+      const pace = document.getElementById('runPace').value || '-';
+      const cal = document.getElementById('runCal').value || '0';
+      desc = `${dist}km / ${time}분 / 페이스 ${pace} (${cal}kcal)`;
+    } else if (selectedCardioCategory === '천국의 계단') {
+      const time = document.getElementById('stairTotalTime').value || '0';
+      const cal = document.getElementById('stairCal').value || '0';
+      desc = `총 ${time}분 (${cal}kcal)`;
+    } else {
+      const time = document.getElementById('genCardioTime').value || '0';
+      const cal = document.getElementById('genCardioCal').value || '0';
+      desc = `${time}분 (${cal}kcal)`;
+    }
+
+    exerciseLogs.push({ type: '유산소', name: selectedCardioCategory, detail: desc });
+    renderExerciseList();
+    showToast('운동이 기록되었습니다.');
+  }
+
+  function addWeightLog() {
+    const name = document.getElementById('weightExName').value.trim();
+    const kg = document.getElementById('weightKg').value || '0';
+    const reps = document.getElementById('weightReps').value || '0';
+    const sets = document.getElementById('weightSets').value || '0';
+
+    if (!name) {
+      showToast('운동 이름을 입력해 주세요.');
+      return;
+    }
+
+    const desc = `${kg}kg × ${reps}회 × ${sets}세트`;
+    exerciseLogs.push({ type: '근력 운동', name: name, detail: desc });
+    
+    document.getElementById('weightExName').value = '';
+    renderExerciseList();
+    showToast('운동이 기록되었습니다.');
+  }
+
+  function renderExerciseList() {
+    const listEl = document.getElementById('exerciseLogList');
+    if (exerciseLogs.length === 0) {
+      listEl.innerHTML = '<div style="font-size:11px; color:var(--text-sub-navy); text-align:center; padding: 10px 0;">기록된 운동이 없습니다.</div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+    exerciseLogs.forEach((log, idx) => {
+      listEl.innerHTML += `
+        <div class="log-item">
+          <div>
+            <strong style="color:var(--text-dark-navy);">${log.type}</strong> - ${log.name}
+            <div style="font-size:10.5px; color:var(--text-sub-navy); margin-top:2px;">${log.detail}</div>
+          </div>
+          <button class="btn-sub" onclick="removeExLog(${idx})">삭제</button>
+        </div>
+      `;
+    });
+
+    localStorage.setItem(STORAGE_KEY + '_ex', JSON.stringify(exerciseLogs));
+  }
+
+  function removeExLog(idx) {
+    exerciseLogs.splice(idx, 1);
+    renderExerciseList();
+    showToast('운동 기록이 삭제되었습니다.');
+  }
+
+  function loadWidgetData() {
+    const wData = localStorage.getItem(STORAGE_KEY + '_weight');
+    if (wData) {
+      const parsed = JSON.parse(wData);
+      if (parsed.weight) document.getElementById('weightInput').value = parsed.weight;
+      if (parsed.hasInbody) {
+        document.getElementById('inbodyToggle').checked = true;
+        toggleInbodyInputs();
+        document.getElementById('smmInput').value = parsed.smm || '';
+        document.getElementById('pbfInput').value = parsed.pbf || '';
+        document.getElementById('bfmInput').value = parsed.bfm || '';
+        document.getElementById('bmiInput').value = parsed.bmi || '';
+        document.getElementById('visceralInput').value = parsed.visceral || '';
+        document.getElementById('bmrInput').value = parsed.bmr || '';
+      }
+    }
+
+    const dData = localStorage.getItem(STORAGE_KEY + '_diet');
+    if (dData) {
+      dietData = JSON.parse(dData);
+      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+        if (dietData[meal]) {
+          document.getElementById(`food-${meal}`).value = dietData[meal].food || '';
+          document.getElementById(`time-${meal}`).value = dietData[meal].time || '';
+          updateMacroDisplay(meal, dietData[meal].cal || 0, dietData[meal].carb || 0, dietData[meal].protein || 0, dietData[meal].fat || 0);
+          if (dietData[meal].photo) {
+            document.getElementById(`img-${meal}`).src = dietData[meal].photo;
+            document.getElementById(`img-${meal}`).style.display = 'block';
+            document.getElementById(`label-${meal}`).style.display = 'none';
+          }
+        }
+      });
+    }
+
+    const exData = localStorage.getItem(STORAGE_KEY + '_ex');
+    if (exData) {
+      exerciseLogs = JSON.parse(exData);
+      renderExerciseList();
+    }
+  }
+
+  /* --- 4. 노션 연동 전송 함수 --- */
+  async function exportToNotion() {
+    showToast('노션으로 데일리 리포트 생성 중...');
+
+    // 최신 상태 동기화
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+      dietData[meal].food = document.getElementById(`food-${meal}`).value;
+      dietData[meal].time = document.getElementById(`time-${meal}`).value;
+    });
+
+    const payload = {
+      date: document.getElementById('todayDate').innerText,
+      weightData: {
+        weight: document.getElementById('weightInput').value,
+        hasInbody: document.getElementById('inbodyToggle').checked,
+        smm: document.getElementById('smmInput').value,
+        pbf: document.getElementById('pbfInput').value,
+        bfm: document.getElementById('bfmInput').value,
+        bmi: document.getElementById('bmiInput').value,
+        visceral: document.getElementById('visceralInput').value,
+        bmr: document.getElementById('bmrInput').value
+      },
+      dietData: dietData,
+      exerciseLogs: exerciseLogs
+    };
+
+    try {
+      const response = await fetch('/api/notion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        showToast('🎉 노션 DB에 성공적으로 등록되었습니다!');
+      } else {
+        alert(`노션 전송 실패: ${result.error || '알 수 없는 오류'}`);
+        showToast('노션 전송 실패');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('서버 연결 중 오류가 발생했습니다.');
+      showToast('전송 실패');
+    }
+  }
+</script>
+</body>
+</html>
