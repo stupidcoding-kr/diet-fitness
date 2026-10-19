@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diet & Fitness Tracker</title>
+  <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #ffffff;
+      --card-border: #e6e6e4;
+
+      --text-dark-navy: #37352f;
+      --text-main-navy: #37352f;
+      --text-sub-navy: #787774;
+      --text-light: #9b9a97;
+
+      --pastel-sky-bg: #f2f2f0;
+      --pastel-sky-soft: #e6e6e4;
+      --pastel-sky-border: #d3d3d0;
+      --pastel-sky-accent: #37352f;
+      --pastel-sky-text: #37352f;
+
+      --accent-gray: #fbfbf9;
+      --accent-soft-red: #fdf2f2;
+      --accent-red-text: #eb5757;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-style: normal !important; }
+
+    html, body {
+      width: 100vw; height: 100vh;
+      margin: 0; padding: 0;
+      overflow: hidden;
+      background: var(--bg-color);
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text-main-navy);
+      user-select: none;
+    }
+
+    .diet-widget {
+      width: 100%; height: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      display: flex; flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 헤더 */
+    .widget-header {
+      padding: 12px 14px 10px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .widget-title {
+      font-size: 15px; font-weight: 700;
+      color: var(--text-dark-navy); letter-spacing: -0.3px;
+    }
+    .header-actions { display: flex; gap: 6px; align-items: center; }
+    
+    .date-badge {
+      font-size: 10.5px; font-weight: 600; color: var(--text-dark-navy);
+      background: #f2f2f0; padding: 3px 8px;
+      border-radius: 12px; border: 1px solid var(--card-border);
+    }
+
+    /* 탭 네비게이션 */
+    .nav-tabs {
+      display: flex; background: #f2f2f0; padding: 3px; gap: 3px;
+      margin: 10px 12px 0; border-radius: 8px;
+    }
+    .tab-btn {
+      flex: 1; border: none; background: transparent; padding: 6px 0;
+      font-size: 11px; font-weight: 700; color: var(--text-sub-navy);
+      border-radius: 6px; cursor: pointer; transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: #ffffff; color: var(--text-dark-navy);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    /* 컨텐츠 영역 */
+    .tab-content {
+      flex: 1; padding: 12px; overflow-y: auto; display: none; flex-direction: column; gap: 10px;
+      min-height: 420px;
+    }
+    .tab-content.active { display: flex; }
+
+    /* 카드 */
+    .section-card {
+      background: #ffffff; border: 1px solid var(--card-border);
+      border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .card-title {
+      font-size: 12px; font-weight: 700; color: var(--text-dark-navy);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    
+    /* Input 공통 */
+    .input-group { display: flex; flex-direction: column; gap: 4px; flex: 1; position: relative; }
+    .input-label { font-size: 10.5px; font-weight: 700; color: var(--text-sub-navy); }
+    .input-field {
+      width: 100%; padding: 7px 9px; border: 1px solid var(--card-border);
+      border-radius: 6px; font-size: 11px; font-weight: 600; outline: none;
+      font-family: inherit; color: var(--text-main-navy); background: #fbfbf9;
+      transition: all 0.15s ease;
+    }
+    .input-field::placeholder { color: var(--text-light); }
+    .input-field:focus {
+      border-color: #37352f; background: #ffffff;
+    }
+
+    /* 커스텀 드롭다운 */
+    .custom-select-box {
+      width: 100%; padding: 7px 10px; border: 1px solid var(--card-border);
+      border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--text-dark-navy);
+      background: #fbfbf9; cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center; transition: all 0.15s ease;
+    }
+    .custom-select-box:hover { background: #f2f2f0; }
+    .custom-select-box .arrow { font-size: 9px; color: var(--text-sub-navy); }
+
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #ffffff; border: 1px solid var(--card-border);
+      border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      display: none; flex-direction: column; z-index: 100; overflow: hidden;
+    }
+    .dropdown-menu.show { display: flex; }
+
+    .dropdown-item {
+      padding: 8px 10px; font-size: 11px; font-weight: 600; color: var(--text-dark-navy);
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: background 0.15s ease;
+    }
+    .dropdown-item:hover { background: #f2f2f0; }
+    .dropdown-item.selected { background: #f2f2f0; font-weight: 700; }
+    
+    .dropdown-item .del-btn {
+      color: var(--text-sub-navy); font-size: 10px; padding: 2px 4px; border-radius: 4px;
+    }
+    .dropdown-item .del-btn:hover { background: var(--accent-soft-red); color: var(--accent-red-text); }
+    
+    .dropdown-add-item {
+      padding: 8px 10px; font-size: 10.5px; font-weight: 700; color: var(--text-dark-navy);
+      border-top: 1px solid var(--card-border); cursor: pointer; background: #fbfbf9;
+    }
+    .dropdown-add-item:hover { background: #f2f2f0; }
+
+    /* 타임 피커 */
+    .time-input {
+      border: 1px solid var(--card-border);
+      border-radius: 5px; padding: 2px 5px;
+      font-size: 10px; font-weight: 700;
+      color: var(--text-dark-navy); background: #ffffff;
+      outline: none; cursor: pointer; font-family: inherit;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+
+    /* 식단 토글 카탈로그 카드 */
+    .meal-row {
+      border: 1px solid var(--card-border); border-radius: 8px;
+      background: #ffffff; overflow: hidden;
+      transition: all 0.15s ease;
+    }
+    .meal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 700; font-size: 12px; color: var(--text-dark-navy);
+      padding: 9px 10px; cursor: pointer; background: #fbfbf9;
+      transition: background 0.15s ease;
+    }
+    .meal-header:hover { background: #f2f2f0; }
+    .meal-title-group { display: flex; align-items: center; gap: 6px; }
+
+    .meal-body {
+      display: none; padding: 10px; flex-direction: column; gap: 8px;
+      border-top: 1px solid var(--card-border); background: #ffffff;
+    }
+    .meal-row.open .meal-body { display: flex; }
+
+    .photo-upload-box {
+      width: 100%; height: 80px; border: 1px dashed var(--card-border);
+      border-radius: 6px; display: flex; justify-content: center; align-items: center;
+      cursor: pointer; background: #fbfbf9; position: relative; overflow: hidden;
+    }
+    .photo-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+    
+    .macro-badge-group {
+      display: flex; gap: 4px; font-size: 9.5px; font-weight: 600; color: var(--text-sub-navy);
+      background: #f2f2f0; padding: 6px 8px; border-radius: 6px; justify-around: space-around;
+    }
+    .macro-item span { color: var(--text-dark-navy); font-weight: 700; }
+
+    /* 운동 세그먼트 (연한 색상 적용) */
+    .exercise-type-selector { display: flex; gap: 4px; }
+    .type-btn {
+      flex: 1; padding: 7px; border: 1px solid var(--card-border); border-radius: 6px;
+      background: #fbfbf9; font-size: 11px; font-weight: 700; color: var(--text-sub-navy); cursor: pointer; text-align: center;
+      transition: all 0.15s ease;
+    }
+    .type-btn.active { 
+      border-color: #d3d3d0; 
+      background: #e6e6e4; 
+      color: #37352f; 
+    }
+
+    .set-row { display: flex; gap: 4px; align-items: center; }
+
+    /* 메인 실행 버튼 (연한 색상 적용) */
+    .btn-main {
+      background: #f2f2f0; 
+      color: #37352f;
+      border: 1px solid #d3d3d0; 
+      padding: 8px;
+      border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center;
+      transition: all 0.15s ease;
+    }
+    .btn-main:hover { 
+      background: #e6e6e4; 
+    }
+    
+    .btn-sub {
+      background: #f2f2f0; color: var(--text-main-navy); border: 1px solid var(--card-border);
+      padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; cursor: pointer;
+    }
+    .btn-sub:hover { background: #e6e6e4; }
+
+    .toggle-container { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 10.5px; color
